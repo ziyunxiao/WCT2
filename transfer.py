@@ -23,6 +23,8 @@ THE SOFTWARE.
 import os
 import tqdm
 import argparse
+import json
+import numpy as np
 
 import torch
 from torchvision.utils import save_image
@@ -131,6 +133,7 @@ def get_all_transfer():
     return ret
 
 
+
 def run_bulk(config):
     device = 'cpu' if config.cpu or not torch.cuda.is_available() else 'cuda:0'
     device = torch.device(device)
@@ -163,9 +166,9 @@ def run_bulk(config):
         content = open_image(_content, config.image_size).to(device)
         style = open_image(_style, config.image_size).to(device)
         content_segment = load_segment(_content_segment, config.image_size)
-        style_segment = load_segment(_style_segment, config.image_size)     
+        style_segment = load_segment(_style_segment, config.image_size)
         _, ext = os.path.splitext(fname)
-        
+
         if not config.transfer_all:
             with Timer('Elapsed time in whole WCT: {}', config.verbose):
                 postfix = '_'.join(sorted(list(transfer_at)))
@@ -185,6 +188,83 @@ def run_bulk(config):
                     with torch.no_grad():
                         img = wct2.transfer(content, style, content_segment, style_segment, alpha=config.alpha)
                     save_image(img.clamp_(0, 1), fname_output, padding=0)
+
+def get_default_config():
+    config = {
+        "alpha": 1, 
+        "content": './examples/content', 
+        'content_segment': None, 
+        "cpu": False, 
+        "image_size": 512, 
+        "option_unpool": 'cat5', 
+        "output": './outputs', 
+        "style": './examples/style', 
+        "style_segment": None, 
+        "transfer_all": False, 
+        "transfer_at_decoder": False, 
+        "transfer_at_encoder": False, 
+        "transfer_at_skip": False, 
+        "verbose": False
+    }
+    return config
+
+def run_bulk2(config:dict):
+    device = 'cpu' if config.get("cpu") or not torch.cuda.is_available() else 'cuda:0'
+    device = torch.device(device)
+
+    transfer_at = set()
+    if config.get("transfer_at_encoder"):
+        transfer_at.add('encoder')
+    if config.get("transfer_at_decoder"):
+        transfer_at.add('decoder')
+    if config.get("transfer_at_skip"):
+        transfer_at.add('skip')
+
+    # The filenames of the content and style pair should match
+    fnames = set(os.listdir(config.get("content"))) & set(os.listdir(config.get("style")))
+
+    if config.get("content_segment") and config.get("style_segment"):
+        fnames &= set(os.listdir(config.get("content_segment")))
+        fnames &= set(os.listdir(config.get("style_segment")))
+
+    farr = sorted(fnames)
+
+    for fname in tqdm.tqdm(farr):
+        if not is_image_file(fname):
+            print('invalid file (is not image), ', fname)
+            continue
+        _content = os.path.join(config.get("content"), fname)
+        _style = os.path.join(config.get("style"), fname)
+        _content_segment = os.path.join(config.get("content_segment"), fname) if config.get("content_segment") else None
+        _style_segment = os.path.join(config.get("style_segment"), fname) if config.get("style_segment") else None
+        _output = os.path.join(config.get("output"), fname)
+
+        content = open_image(_content, config.get("image_size")).to(device)
+        style = open_image(_style, config.get("image_size")).to(device)
+        content_segment = load_segment(_content_segment, config.get("image_size"))
+        style_segment = load_segment(_style_segment, config.get("image_size"))
+        _, ext = os.path.splitext(fname)
+
+        if not config.get("transfer_all"):
+            with Timer('Elapsed time in whole WCT: {}', config.get("verbose")):
+                postfix = '_'.join(sorted(list(transfer_at)))
+                fname_output = _output.replace(ext, '_{}_{}.{}'.format(config.get("option_unpool"), postfix, ext))
+                print('------ transfer:', _output)
+                wct2 = WCT2(transfer_at=transfer_at, option_unpool=config.get("option_unpool"), device=device, verbose=config.get("verbose"))
+                with torch.no_grad():
+                    img = wct2.transfer(content, style, content_segment, style_segment, alpha=config.get("alpha"))
+                save_image(img.clamp_(0, 1), fname_output, padding=0)
+        else:
+            for _transfer_at in get_all_transfer():
+                with Timer('Elapsed time in whole WCT: {}', config.get("verbose")):
+                    postfix = '_'.join(sorted(list(_transfer_at)))
+                    fname_output = _output.replace(ext, '_{}_{}.{}'.format(config.get("option_unpool"), postfix, ext))
+                    print('------ transfer:', fname)
+                    wct2 = WCT2(transfer_at=_transfer_at, option_unpool=config.get("option_unpool"), device=device, verbose=config.get("verbose"))
+                    with torch.no_grad():
+                        img = wct2.transfer(content, style, content_segment, style_segment, alpha=config.get("alpha"))
+                    save_image(img.clamp_(0, 1), fname_output, padding=0)
+
 
 
 if __name__ == '__main__':
@@ -206,6 +286,7 @@ if __name__ == '__main__':
     config = parser.parse_args()
 
     print(config)
+
 
     if not os.path.exists(os.path.join(config.output)):
         os.makedirs(os.path.join(config.output))
