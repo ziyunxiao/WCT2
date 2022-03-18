@@ -22,6 +22,7 @@ data_root = "./805"
 config = get_default_config()
 config["transfer_all"] = True
 # config["transfer_at_skip"] = True
+config["option_unpool"] = "sum"
 config["content"] = f"{data_root}/content"
 config["content_segment"] = f"{data_root}/content_segment"
 config["style"] = f"{data_root}/style"
@@ -29,8 +30,22 @@ config["style_segment"] = f"{data_root}/style_segment"
 config["verbose"] = True
 config["output"] = f"{data_root}/output"
 
+# run_bulk2(config)
+
+data_root = "./building"
+config = get_default_config()
+config["transfer_all"] = True
+# config["transfer_at_skip"] = True
+config["option_unpool"] = "cat5"
+config["content"] = f"{data_root}/content"
+# config["content_segment"] = f"{data_root}/content_segment"
+config["style"] = f"{data_root}/style"
+# config["style_segment"] = f"{data_root}/style_segment"
+config["verbose"] = True
+config["output"] = f"{data_root}/output"
 
 run_bulk2(config)
+
 
 
 data_root = "./examples"

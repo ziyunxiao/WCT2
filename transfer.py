@@ -249,7 +249,7 @@ def run_bulk2(config:dict):
             with Timer('Elapsed time in whole WCT: {}', config.get("verbose")):
                 postfix = '_'.join(sorted(list(transfer_at)))
                 fname_output = _output.replace(ext, '_{}_{}.{}'.format(config.get("option_unpool"), postfix, ext))
-                print('------ transfer:', _output)
+                # print('------ transfer:', _output)
                 wct2 = WCT2(transfer_at=transfer_at, option_unpool=config.get("option_unpool"), device=device, verbose=config.get("verbose"))
                 with torch.no_grad():
                     img = wct2.transfer(content, style, content_segment, style_segment, alpha=config.get("alpha"))
@@ -259,7 +259,7 @@ def run_bulk2(config:dict):
                 with Timer('Elapsed time in whole WCT: {}', config.get("verbose")):
                     postfix = '_'.join(sorted(list(_transfer_at)))
                     fname_output = _output.replace(ext, '_{}_{}.{}'.format(config.get("option_unpool"), postfix, ext))
-                    print('------ transfer:', fname)
+                    # print('------ transfer:', fname)
                     wct2 = WCT2(transfer_at=_transfer_at, option_unpool=config.get("option_unpool"), device=device, verbose=config.get("verbose"))
                     with torch.no_grad():
                         img = wct2.transfer(content, style, content_segment, style_segment, alpha=config.get("alpha"))
