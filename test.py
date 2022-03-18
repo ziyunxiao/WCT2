@@ -20,14 +20,28 @@ from transfer import run_bulk2, get_default_config
 
 data_root = "./805"
 config = get_default_config()
-# config["transfer_all"] = True
-config["transfer_at_skip"] = True
+config["transfer_all"] = True
+# config["transfer_at_skip"] = True
 config["content"] = f"{data_root}/content"
-# config["content_segment"] = f"{data_root}/content_segment"
+config["content_segment"] = f"{data_root}/content_segment"
 config["style"] = f"{data_root}/style"
-# config["style_segment"] = f"{data_root}/style_segment"
+config["style_segment"] = f"{data_root}/style_segment"
 config["verbose"] = True
 config["output"] = f"{data_root}/output"
 
 
 run_bulk2(config)
+
+
+data_root = "./examples"
+config = get_default_config()
+config["transfer_all"] = True
+# config["transfer_at_encoder"] = True
+config["content"] = f"{data_root}/content"
+config["content_segment"] = f"{data_root}/content_segment"
+config["style"] = f"{data_root}/style"
+config["style_segment"] = f"{data_root}/style_segment"
+config["verbose"] = True
+config["output"] = "./outputs"
+
+# run_bulk2(config)

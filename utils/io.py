@@ -51,7 +51,11 @@ def change_seg(seg):
         (0, 255, 255): 7,  # lightblue
         (255, 0, 255): 8  # purple
     }
+
     arr_seg = np.asarray(seg)
+    h,w,c = arr_seg.shape
+    if c == 4:
+        arr_seg = arr_seg[:,:,:-1]
     new_seg = np.zeros(arr_seg.shape[:-1])
     for x in range(arr_seg.shape[0]):
         for y in range(arr_seg.shape[1]):
